@@ -10,6 +10,7 @@ import java.util.List;
 import static dev.marcusxavier.lox.TokenType.*;
 
 public class Scanner {
+    private final ScannerLiterals scannerLiterals;
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
     private int start = 0;
@@ -18,6 +19,7 @@ public class Scanner {
 
     public Scanner(String source) {
         this.source = source;
+        this.scannerLiterals = new ScannerLiterals(this.source);
     }
 
     public List<Token> scanTokens() {
@@ -70,9 +72,9 @@ public class Scanner {
             case '"' -> string();
             
             default -> {
-               if (isDigit(c)) {
+               if (TypeValidator.isDigit(c)) {
                    number();
-               } else if (isAlpha(c)){ 
+               } else if (TypeValidator.isAlpha(c)){ 
                    identifier();        
                } else {
                    Lox.error(line, "Unexpected character.");
@@ -81,51 +83,25 @@ public class Scanner {
         }
     } 
   
-    // TODO: Refactor this literal functions so this can go to another class, but it messes with state.
-    // Maybe the state can go there
     private void string() {
-        while (peek() != '"' && !isAtEnd()) {
-           if (peek() == '\n') {
-               line++;
-           }
-           advance(); 
-        }
-       
-        if (isAtEnd()) {
-            Lox.error(line, "Unterminated string.");
-            return;
-        }
-      
-        // The closing "
-        advance();
-      
-        String value = source.substring(start + 1, current - 1);
-        addToken(STRING, value); 
+        LiteralData data = scannerLiterals.string(start, current, line);
+        updateState(data);
     }
   
     private void number() {
-        while (isDigit(peek())) advance(); 
-        
-        if (peek() == '.' && isDigit(peekNext()))  {
-            do {
-                advance();
-            }
-            while (isDigit(peek()));
-        }
-        
-        Double num = Double.parseDouble(source.substring(start, current));
-        addToken(NUMBER, num);
+        LiteralData data = scannerLiterals.number(start, current, line);
+        updateState(data); 
     }
   
     private void identifier() {
-        while(isAlphaNumeric(peek())) advance();
-      
-        String text = source.substring(start, current);
-        TokenType type = ScannerKeywords.keywords.get(text);
-        if (type == null) {
-            type = IDENTIFIER;
-        }
-        addToken(type);
+        LiteralData data = scannerLiterals.identifier(start, current, line);
+        updateState(data); 
+    }
+  
+    private void updateState(LiteralData data) {
+        data.token().ifPresent(tokens::add);
+        current = data.current();
+        line = data.line();
     }
     
     private char advance() {
@@ -155,27 +131,8 @@ public class Scanner {
         return current >= source.length();
     }
     
-    private boolean isAlphaNumeric(char c) {
-        return isAlpha(c) || isDigit(c);
-    }
-
-    private boolean isAlpha(char c) {
-        return (c >= 'a' && c <= 'z') ||
-                (c >= 'A' && c <= 'Z') ||
-                c == '_';
-    }
-    
-    private boolean isDigit(char c) {
-        return c >= '0' && c <= '9';
-    }
-    
     private char peek() {
         if (isAtEnd()) return '\0';
         return source.charAt(current);
     }  
-  
-    private char peekNext() {
-        if (current + 1 >= source.length()) return '\0';
-        return source.charAt(current + 1); 
-    }
 }
