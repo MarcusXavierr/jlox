@@ -6,10 +6,8 @@ import dev.marcusxavier.lox.TokenType;
 
 import java.util.Optional;
 
-import static dev.marcusxavier.lox.TokenType.*;
-
 class ScannerLiterals {
-    
+
     private final String source;
 
     ScannerLiterals(String source) {
@@ -34,10 +32,10 @@ class ScannerLiterals {
 
         String value = source.substring(start + 1, current - 1);
         String text = source.substring(start, current);
-        var literal = Optional.of(new Token(STRING, text, value, line));
-        return new LiteralData(literal, current, line); 
+        var literal = Optional.of(new Token(TokenType.STRING, text, value, line));
+        return new LiteralData(literal, current, line);
     }
-  
+
     public LiteralData number(int start, int current, int line) {
         while (TypeValidator.isDigit(peek(current))) current++;
 
@@ -50,8 +48,8 @@ class ScannerLiterals {
 
         String text = source.substring(start, current);
         Double num = Double.parseDouble(text);
-        Token token = new Token(NUMBER, text, num, line);
-        
+        Token token = new Token(TokenType.NUMBER, text, num, line);
+
         return new LiteralData(Optional.of(token), current, line);
     }
 
@@ -62,9 +60,9 @@ class ScannerLiterals {
         String text = source.substring(start, current);
         TokenType type = ScannerKeywords.keywords.get(text);
         if (type == null) {
-            type = IDENTIFIER;
+            type = TokenType.IDENTIFIER;
         }
-        
+
         Token token = new Token(type, text, null, line);
         return new LiteralData(Optional.of(token), current, line);
     }
