@@ -1,7 +1,7 @@
 package dev.marcusxavier.lox;
 
 class AstPrinter implements Expr.Visitor<String> {
-    
+
     String print(Expr expr) {
         return expr.accept(this);
     }
@@ -13,33 +13,34 @@ class AstPrinter implements Expr.Visitor<String> {
 
     @Override
     public String visitGroupingExpr(Expr.Grouping expr) {
-        return parenthesize("group", expr.expression);
+        return parenthesize(null, expr.expression);
     }
 
     @Override
     public String visitLiteralExpr(Expr.Literal expr) {
         if (expr.value == null) return "nil";
-        return expr.value.toString(); 
+        return expr.value.toString();
     }
 
     @Override
     public String visitUnaryExpr(Expr.Unary expr) {
         return parenthesize(expr.operator.lexeme, expr.right);
     }
-    
+
     private String parenthesize(String name, Expr... exprs) {
         StringBuilder builder = new StringBuilder();
-      
-        builder.append("(").append(name);
+
+        // Trick to deal with grouping expressions and create valid lisp code
+        if (name != null) builder.append("(").append(name);
         for (Expr expr : exprs) {
             builder.append(" ");
             builder.append(expr.accept(this));
         }
-        builder.append(")");
-      
+        if (name != null) builder.append(")");
+
         return builder.toString();
     }
-    
+
     public static void main(String[] args) {
         Expr expression = new Expr.Binary(
                 new Expr.Unary(
@@ -50,5 +51,5 @@ class AstPrinter implements Expr.Visitor<String> {
                         new Expr.Literal(45.67)));
 
         System.out.println(new AstPrinter().print(expression));
-    } 
+    }
 }
