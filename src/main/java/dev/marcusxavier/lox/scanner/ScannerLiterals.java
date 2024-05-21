@@ -55,9 +55,13 @@ class ScannerLiterals {
 
 
     public LiteralData identifier(int start, int current, int line) {
-        while(TypeValidator.isAlphaNumeric(peek(current))) current++;
+        while(TypeValidator.isAlphaNumeric(peek(current))) {
+            // read each letter from string until it finds and non-alphanumerical char (^[0-9]|[a-z]|'_') 
+            current++;
+        }
 
         String text = source.substring(start, current);
+        // Tries to find extracted string into reserved words
         TokenType type = ScannerKeywords.keywords.get(text);
         if (type == null) {
             type = TokenType.IDENTIFIER;
